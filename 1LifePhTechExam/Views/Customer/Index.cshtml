@@ -1,0 +1,70 @@
+﻿<div class="container mt-4">
+    <h2>Customer Management</h2>
+    <button class="btn btn-primary mb-3" id="btnAdd">Add Customer</button>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Mobile Number</th>
+                <th>City</th>
+                <th>Is Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="customerTableBody">
+            <!-- Data will be appended here dynamically -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="customerId">
+                <div class="mb-3">
+                    <label>First Name</label>
+                    <input type="text" class="form-control" id="firstName">
+                    <div class="text-danger" id="firstNameError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Last Name</label>
+                    <input type="text" class="form-control" id="lastName">
+                    <div class="text-danger" id="lastNameError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Mobile Number</label>
+                    <input type="text" class="form-control" id="mobileNumber">
+                    <div class="text-danger" id="mobileError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>City</label>
+                    <input type="text" class="form-control" id="city">
+                    <div class="text-danger" id="cityError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Is Active</label>
+                    <input type="checkbox" id="isActive">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnSave">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts {
+    @{
+
+        await Html.RenderPartialAsync("IndexScript", null);
+
+    }
+}

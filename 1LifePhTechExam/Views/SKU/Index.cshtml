@@ -1,0 +1,71 @@
+﻿<div class="container mt-4">
+    <h2>SKU Management</h2>
+    <button class="btn btn-primary mb-3" id="btnAdd">Add SKU</button>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>SKU Name</th>
+                <th>SKU Code</th>
+                <th>Unit Price</th>
+                <th>Is Active</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="skuTableBody">            
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="skuModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add SKU</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="skuId">
+                
+                <div class="mb-3">
+                    <label>SKU Image</label>
+                    <input type="file" class="form-control" id="skuImage">
+                    <img id="imagePreview" src="" class="img-thumbnail mt-2" style="display:none; max-width: 100px;">
+                </div>
+
+                <div class="mb-3">
+                    <label>SKU Name</label>
+                    <input type="text" class="form-control" id="skuName">
+                    <div class="text-danger" id="skuNameError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>SKU Code</label>
+                    <input type="text" class="form-control" id="skuCode">
+                    <div class="text-danger" id="skuCodeError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Unit Price</label>
+                    <input type="text" class="form-control" id="unitPrice">
+                    <div class="text-danger" id="unitPriceError"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Is Active</label>
+                    <input type="checkbox" id="isActive">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnSave">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts {
+    @{
+
+        await Html.RenderPartialAsync("IndexScript", null);
+
+    }
+}

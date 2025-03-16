@@ -1,0 +1,143 @@
+﻿<script>
+    $(document).ready(function () {
+    function loadSKU() {
+        $.ajax({
+                url: 'https://localhost:7263/api/SKU/GetAllSKU',
+            method: 'GET',
+            success: function (data) {
+                let rows = '';
+                data.forEach(c => {
+                    let imgTag = c.imagePath ? `<img src="${c.imagePath}" class="img-thumbnail" style="max-width: 50px;">` : '';
+                    
+                    rows += `<tr>
+                                <td>${imgTag}</td>
+                                <td>${c.skuName}</td>
+                                <td>${c.skuCode}</td>
+                                <td>${c.unitPrice}</td>
+                                <td>${c.isActive ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <button class='btn btn-warning btnEdit' data-id='${c.skuID}'>Edit</button>
+                                    <button class='btn btn-danger btnDelete' data-id='${c.skuID}'>Delete</button>
+                                </td>
+                            </tr>`;
+                });
+                $('#skuTableBody').html(rows);
+            }
+        });
+    }
+
+    $('#skuImage').change(function (event) {
+        let file = event.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function (e) {
+                $('#imagePreview').attr('src', e.target.result).show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    $('#btnAdd').click(function () {
+        $('#modalTitle').text('Add SKU');
+        $('#skuId').val('');
+        $('#skuName, #skuCode, #unitPrice').val('');
+        $('#isActive').prop('checked', false);
+        $('#imagePreview').attr('src', '').hide();
+        $('#imagePreview').hide();
+        $('#skuModal').modal('show');
+    });
+
+    $(document).on('click', '.btnEdit', function () {
+        let id = $(this).data('id');
+        $.ajax({
+                url: `https://localhost:7263/api/SKU/GetSKU?skuId=${id}`,
+            method: 'GET',
+            success: function (c) {
+                $('#modalTitle').text('Edit SKU');
+                $('#skuId').val(c.skuID);
+                $('#skuName').val(c.skuName);
+                $('#skuCode').val(c.skuCode);
+                $('#unitPrice').val(c.unitPrice);
+                $('#isActive').prop('checked', c.isActive);
+
+                if (c.imagePath) {
+                    $('#imagePreview').attr('src', c.imagePath).show();
+                } else {
+                    $('#imagePreview').hide();
+                }
+
+                $('#skuModal').modal('show');
+            },
+            error: function () {
+                alert("Failed to fetch the SKU data.");
+            }
+        });
+    });
+
+    $('#btnSave').click(function () {
+        let sku = new FormData();
+        sku.append("skuId", $('#skuId').val() || 0);
+        sku.append("skuName", $('#skuName').val());
+        sku.append("skuCode", $('#skuCode').val());
+        sku.append("unitPrice", $('#unitPrice').val());
+        sku.append("isActive", $('#isActive').is(':checked'));
+
+        let file = $('#skuImage')[0].files[0];
+        if (file) {
+            sku.append("imageFile", file);
+        }
+
+        $(".text-danger").text("");
+
+        let isValid = true;
+        if (!$('#skuName').val()) {
+            $("#skuNameError").text("SKU Name is required.");
+            isValid = false;
+        }
+        if (!$('#skuCode').val()) {
+            $("#skuCodeError").text("SKU Code is required.");
+            isValid = false;
+        }
+        if (!$('#unitPrice').val().match(/^\d+(\.\d{1,2})?$/)) {
+            $("#unitPriceError").text("Invalid Unit Price.");
+            isValid = false;
+        }
+        if (!isValid) return;
+
+        let method = $('#skuId').val() == 0 ? 'POST' : 'PUT';
+            let url = $('#skuId').val() == 0 ? 'https://localhost:7263/api/SKU/CreateSKU' : 'https://localhost:7263/api/SKU/UpdateSKU';
+
+        $.ajax({
+            url: url,
+            method: method,
+            processData: false,
+            contentType: false,
+            data: sku,
+            success: function () {
+                $('#skuModal').modal('hide');
+                loadSKU();
+            },
+            error: function () {
+                alert("Failed to save the SKU.");
+            }
+        });
+    });
+
+    $(document).on('click', '.btnDelete', function () {
+        if (confirm('Are you sure you want to delete this SKU?')) {
+            let id = $(this).data('id');
+            $.ajax({
+                    url: `https://localhost:7263/api/SKU/DeleteSKU?skuId=${id}`,
+                method: 'DELETE',
+                success: function () {
+                    loadSKU();
+                }
+            });
+        }
+    });
+
+    loadSKU();
+});
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

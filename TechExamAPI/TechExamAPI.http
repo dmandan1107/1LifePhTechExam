@@ -1,0 +1,6 @@
+@TechExamAPI_HostAddress = http://localhost:5143
+
+GET {{TechExamAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

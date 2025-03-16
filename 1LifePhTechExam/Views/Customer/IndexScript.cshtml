@@ -1,0 +1,135 @@
+﻿
+<script>
+    $(document).ready(function () {
+        function loadCustomers() {
+            // Example AJAX GET request (change URL accordingly)
+            $.ajax({
+                url: 'https://localhost:7263/api/Customer/getAllCustomer',
+                method: 'GET',
+                success: function (data) {
+                    let rows = '';
+                    data.forEach(c => {
+                        rows += `<tr>
+                                <td>${c.fullName}</td>
+                                <td>${c.mobileNumber}</td>
+                                <td>${c.city}</td>
+                                <td>${c.isActive ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <button class='btn btn-warning btnEdit' data-id='${c.customerId}'>Edit</button>
+                                    <button class='btn btn-danger btnDelete' data-id='${c.customerId}'>Delete</button>
+                                </td>
+                            </tr>`;
+                    });
+                    $('#customerTableBody').html(rows);
+                }
+            });
+        }
+
+        $('#btnAdd').click(function () {
+            $('#modalTitle').text('Add Customer');
+            $('#customerId').val('');
+            $('#firstName, #lastName, #mobileNumber, #city').val('');
+            $('#isActive').prop('checked', false);
+            $('#customerModal').modal('show');
+        });
+
+        $(document).on('click', '.btnEdit', function () {
+            let id = $(this).data('id');
+            $.ajax({
+                url: `https://localhost:7263/api/Customer/GetCustomer?customerId=${id}`,
+                method: 'GET',
+                success: function (c) {
+                    console.log(c);
+                    $('#modalTitle').text('Edit Customer');
+                    $('#customerId').val(c.customerId);
+                    $('#firstName').val(c.firstName);
+                    $('#lastName').val(c.lastName);
+                    $('#mobileNumber').val(c.mobileNumber);
+                    $('#city').val(c.city);
+                    $('#isActive').prop('checked', c.isActive);
+                    $('#customerModal').modal('show');
+                },
+                error: function (xhr) {
+                    alert("Failed to fetch the customers data.");
+                }
+            });
+        });
+
+        $('#btnSave').click(function () {
+            let customer = {
+                customerId: $('#customerId').val() || 0,
+                FirstName: $('#firstName').val(),
+                LastName: $('#lastName').val(),
+                FullName: $('#firstName').val() + ' ' + $('#lastName').val(),
+                MobileNumber: $('#mobileNumber').val(),
+                City: $('#city').val(),
+                IsActive: $('#isActive').is(':checked')
+            };
+
+            // Clear previous errors
+            $(".text-danger").text("");
+
+            // Client-side validation
+            let isValid = true;
+            if (!customer.FirstName.trim()) {
+                $("#firstNameError").text("First name is required.");
+                isValid = false;
+            }
+            if (!customer.LastName.trim()) {
+                $("#lastNameError").text("Last name is required.");
+                isValid = false;
+            }
+            if (!customer.MobileNumber.match(/^\d{10}$/)) {
+                $("#mobileError").text("Invalid mobile number. Must be 10 digits.");
+                isValid = false;
+            }
+            if (!customer.City.trim()) {
+                $("#cityError").text("City is required.");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            let method = customer.customerId == 0 ? 'POST' : 'PUT';
+            let url = customer.customerId == 0 ? 'https://localhost:7263/api/Customer/CreateCustomer' : 'https://localhost:7263/api/Customer/UpdateCustomer';
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(customer),
+                success: function (response) {
+                    $('#customerModal').modal('hide');
+                    loadCustomers();
+                },
+                error: function (xhr) {
+                    if (xhr.status === 400) {
+                        let errors = xhr.responseJSON.errors;
+                        if (errors.firstName) $("#firstName").next(".text-danger").text(errors.firstName);
+                        if (errors.lastName) $("#lastName").next(".text-danger").text(errors.lastName);
+                        if (errors.mobileNumber) $("#mobileNumber").next(".text-danger").text(errors.mobileNumber);
+                    } else {
+                        alert("Failed to save the customer.");
+                    }
+                }
+            });
+        });
+
+
+        $(document).on('click', '.btnDelete', function () {
+            if (confirm('Are you sure you want to delete this customer?')) {
+                let id = $(this).data('id');
+                $.ajax({
+                    url: `https://localhost:7263/api/Customer/DeleteCustomer/${id}`,
+                    method: 'DELETE',
+                    success: function () {
+                        loadCustomers();
+                    }
+                });
+            }
+        });
+
+        loadCustomers();
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

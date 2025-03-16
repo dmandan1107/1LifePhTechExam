@@ -1,0 +1,331 @@
+﻿<script>
+$(document).ready(function () {
+    let skuList = []
+    let curRowId = '';
+    //START - Customer Search
+    $("#customerName").on("input", function () {
+        let query = $(this).val();
+
+        if (query.length > 0 && query != '' && query != null) {
+            $.ajax({
+                    url: "https://localhost:7263/api/Order/GetAllCustomer",
+                method: "GET",
+                data: { search: query },
+                success: function (customers) {
+                    let suggestions = $("#customerSuggestions");
+                    suggestions.empty().show();
+
+                    if (customers.length === 0) {
+                        suggestions.append('<div class="list-group-item">No results found</div>');
+                    } else {
+                        customers.forEach(customer => {
+                            suggestions.append(`<div class="list-group-item list-group-item-action" data-id="${customer.customerId}" data-name="${customer.fullName}">${customer.fullName}</div>`);
+                        });
+                    }
+                }
+            });
+        } else {
+            $("#customerSuggestions").hide();
+        }
+    });
+
+    $(document).on("click", "#customerSuggestions .list-group-item", function () {
+        $('#customerId').val($(this).data("id"));
+        $("#customerName").val($(this).data("name"));
+        $("#customerSuggestions").hide();
+    });
+
+    $(document).click(function (e) {
+        if (!$(e.target).closest("#customerName, #customerSuggestions").length) {
+            $("#customerSuggestions").hide();
+        }
+    });
+    //END - Customer Search
+
+    //START - SKU Search
+    $("#skuName").on("input", function () {
+        let query = $(this).val();
+
+        if (query.length > 0 && query != '' && query != null) {
+            $.ajax({
+                    url: "https://localhost:7263/api/Order/GetAllSKU",
+                method: "GET",
+                data: { search: query },
+                success: function (data) {
+                    let suggestions = $("#skuSuggestions");
+                    suggestions.empty().show();
+
+                    if (data.length === 0) {
+                        suggestions.append('<div class="list-group-item">No results found</div>');
+                    } else {
+                        let skuCntr = 0;
+                        data.forEach(data => {                                                        
+                            if (!skuList.some(item => item.skuId == data.skuID)) {
+                                suggestions.append(`<div class="list-group-item list-group-item-action" data-id="${data.skuID}" data-name="${data.skuName}" data-price="${data.unitPrice}">${data.skuName}</div>`);
+                                skuCntr = skuCntr + 1;
+                            }                            
+                        });
+
+                        if (skuCntr == 0) {
+                            suggestions.append('<div class="list-group-item">No results found</div>');
+                        }
+                    }
+                }
+            });
+        } else {
+            $("#skuSuggestions").hide();
+        }
+    });
+
+    $(document).on("click", "#skuSuggestions .list-group-item", function () {
+        $('#skuId').val($(this).data("id"));
+        $("#skuName").val($(this).data("name"));
+        $('#quantity').data('price', $(this).data("price"))        
+        $("#quantity").blur();
+        $("#skuSuggestions").hide();
+    });
+
+    $(document).click(function (e) {
+        if (!$(e.target).closest("#skuName, #skuSuggestions").length) {
+            $("#skuSuggestions").hide();
+        }
+    });
+
+    $("#quantity").on("input change blur", function () {
+        $('#totalPrice').val(moneyFormat($(this).data('price') * $(this).val()));
+    });
+    //END - SKU Search
+
+    let tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    let minDateTime = tomorrow.toISOString().slice(0, 16);
+
+    $("#deliveryDate").attr("min", minDateTime);
+
+    function loadOrders() {
+        $.ajax({
+            url: "https://localhost:7263/api/Order/GetAllOrder",
+            method: 'GET',
+            success: function (data) {
+                let rows = '';
+                data.forEach(c => {
+                    rows += `<tr>
+                                <td>${c.customerName}</td>
+                                <td>${c.dateOfDelivery}</td>
+                                <td>${c.status}</td>
+                                <td>${moneyFormat(c.amountDue)}</td>
+                                <td>
+                                    <button class='btn btn-warning btnEdit' data-id='${c.purchaseOrderID}'>Edit</button>
+                                    <button class='btn btn-danger btnDelete' data-id='${c.purchaseOrderID}'>Delete</button>
+                                </td>
+                            </tr>`;
+                });
+                $('#orderTableBody').html(rows);
+            }
+        });
+    }
+
+    $('#btnAdd').click(function () {
+        $('#modalTitle').text('Add Order');
+        $('#purchaseOrderID, #customerId, #customerName, #deliveryDate').val('');
+        $('#status').val('New');     
+        $('#status').attr('disabled', true);
+        skuList = [];
+        loadOrdersList();
+        $('#orderModal').modal('show');
+    });
+
+    $('#btnAddItem').click(function () {        
+        $('#skuName').val('');
+        $('#quantity, #totalPrice').val('0');
+        curRowId = '';
+        $('#addItemModal').modal('show');
+    });
+
+    $(document).on('click', '.btnEdit', function () {
+        let id = $(this).data('id');
+        skuList = [];
+        $.ajax({
+                url: `https://localhost:7263/api/Order/getOrderDetails?purchaseOrderID=${id}`,
+            method: 'GET',
+            success: function (c) {
+                $('#modalTitle').text('Edit Order');
+                $('#purchaseOrderID').val(c.purchaseOrderID);
+                $('#customerId').val(c.customerID);
+                $('#customerName').val(c.customerName);
+                $('#deliveryDate').val(c.deliveryDate);
+                $('#status').val(c.status);    
+
+                c.purchaseItems.forEach((i, index) => {
+                    skuList.push({
+                        rowId: skuList.length,
+                        skuId: i.skuId, 
+                        skuName: i.skuName, 
+                        unitPrice: i.unitPrice, 
+                        quantity: i.quantity, 
+                        totalPrice: i.totalPrice
+                    });
+                });
+
+                loadOrdersList();
+
+                $('#orderModal').modal('show');
+            },
+            error: function () {
+                alert("Failed to fetch the SKU data.");
+            }
+        });
+    });
+
+    $(document).on('click', '.btnEditItem', function () {
+        curRowId = $(this).data('rowid');
+        let item = skuList.find(i => i.rowId == curRowId);
+
+        if (item) {
+            $('#skuId').val(item.skuId);
+            $('#skuName').val(item.skuName);
+            $('#quantity').data('price', item.unitPrice)
+            $('#quantity').val(item.quantity);
+        }
+        
+        $('#addItemModal').modal('show');
+    });
+
+    $('#btnSaveItem').click(function () {
+        if (curRowId === '') {
+            skuList.push({
+            rowId: skuList.length,
+            skuId: $('#skuId').val(), 
+            skuName: $('#skuName').val(), 
+            unitPrice: $('#quantity').data('price'), 
+            quantity: $('#quantity').val(), 
+            totalPrice: ($('#quantity').val() * $('#quantity').data('price')) });           
+        }
+        else {
+            let item = skuList.find(i => i.rowId === curRowId);
+    
+            if (item) {
+                item.skuId = $('#skuId').val();
+                item.skuName = $('#skuName').val();
+                item.unitPrice = $('#quantity').data('price')
+                item.quantity = $('#quantity').val();
+                item.totalPrice = ($('#quantity').val() * $('#quantity').data('price'));
+            }
+        }
+
+        loadOrdersList();
+        
+        $('#addItemModal').modal('hide');
+    });
+
+    $('#btnSave').click(function () {     
+
+        if ($('#purchaseOrderID').val() == '') {
+            let orderDetails = {
+                customerID: $('#customerId').val(),
+                customerName: $('#customerName').val(),
+                status: $('#status').val(),
+                amountDue: $('#amountDue').data('amountdue'),
+                purchaseItems: skuList
+            };  
+
+            $.ajax({
+                    url: 'https://localhost:7263/api/Order/create',
+                method: 'POST',
+                processData: false,
+                contentType: 'application/json',
+                data: JSON.stringify(orderDetails),
+                success: function () {
+                    alert("Order Created.");
+                    loadOrders();
+                    $('#orderModal').modal('hide');
+                },
+                error: function () {
+                    alert("Failed to save the Order.");
+                }
+            });
+        }
+        else {
+            
+            let orderDetails = {
+                purchaseOrderID: $('#purchaseOrderID').val(),
+                customerID: $('#customerId').val(),
+                customerName: $('#customerName').val(),
+                status: $('#status').val(),
+                amountDue: $('#amountDue').data('amountdue'),
+                purchaseItems: skuList
+            }; 
+
+            $.ajax({
+                url: 'https://localhost:7263/api/Order/update',
+                method: 'PUT',
+                processData: false,
+                contentType: 'application/json',
+                data: JSON.stringify(orderDetails),
+                success: function () {
+                alert("Order Updated.");
+                loadOrders();
+                $('#orderModal').modal('hide');
+            },
+            error: function () {
+                alert("Failed to save the Order.");
+            }
+            });
+        }
+
+        
+    });
+
+    // $(document).on('click', '.btnDelete', function () {
+    //     if (confirm('Are you sure you want to delete this SKU?')) {
+    //         let id = $(this).data('id');
+    //         $.ajax({
+    //             url: `/SKU/DeleteSKU?skuId=${id}`,
+    //             method: 'DELETE',
+    //             success: function () {
+    //                 loadOrders();
+    //             }
+    //         });
+    //     }
+    // });
+
+    $(document).on('click', '.btnDeleteItem', function () {
+        if (confirm('Are you sure you want to delete this SKU?')) {
+            let id = $(this).data('id');
+            skuList = skuList.filter(item => item.skuId != id);
+            loadOrdersList();
+        }
+    });
+
+    function loadOrdersList() {
+        let rows = ""; 
+        let totalAmountDue = 0;
+        skuList.forEach((i, index) => {
+            rows += `<tr>
+                        <td>${i.skuName}</td>
+                        <td>${i.quantity}</td>
+                        <td>${moneyFormat(i.totalPrice)}</td>
+                        <td>
+                            <button class='btn btn-warning btnEditItem' data-id='${i.skuId}' data-rowid='${i.rowId}'>Edit</button>
+                            <button class='btn btn-danger btnDeleteItem' data-id='${i.skuId}'>Delete</button>
+                        </td>
+                    </tr>`;
+
+            totalAmountDue += i.totalPrice;
+        });
+            
+        $('#tblPurchaseOrderItemBody').html(rows);            
+        $('#amountDue').val(moneyFormat(totalAmountDue));
+        $('#amountDue').data('amountdue', totalAmountDue);
+    }
+
+    function moneyFormat(input) {
+        return input.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    }
+
+    loadOrders();
+});
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
