@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Data;
 using TechExamAPI.Interface;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System;
 
 namespace TechExamAPI.Implementation
 {
@@ -38,6 +39,22 @@ namespace TechExamAPI.Implementation
             return res;
         }
 
+        public async Task<Dictionary<string, string>> ValidateField(string input, string valType, string fieldName, int skuID = 0)
+        {
+            var errors = new Dictionary<string, string>();
+            var param = new DynamicParameters();
+            param.Add("@@SkuID", skuID);
+            param.Add("@Input", input);
+            param.Add("@ValType", valType);
+            var exists = await _repo.GetData<bool>("ValidateSKUInput", param);
+            if (exists)
+            {
+                errors[fieldName] = $"{valType} already exists.";
+            }
+
+            return errors;
+        }
+
         public async Task<SKUGVM> CreateSKU(SKUGVM data)
         {
             try
@@ -46,10 +63,8 @@ namespace TechExamAPI.Implementation
                 parameters.Add("@SkuName", data.SkuName);
                 parameters.Add("@SkuCode", data.SkuCode);
                 parameters.Add("@UnitPrice", data.UnitPrice);
-                parameters.Add("@IsActive", data.IsActive);
+                parameters.Add("@IsActive", true);
                 var res = await _repo.GetData<SKUGVM>("CreateSKU", parameters);             
-                
-                
 
                 return res;
             }
@@ -88,7 +103,6 @@ namespace TechExamAPI.Implementation
                 parameters.Add("@SkuName", data.SkuName);
                 parameters.Add("@SkuCode", data.SkuCode);
                 parameters.Add("@UnitPrice", data.UnitPrice);
-                parameters.Add("@IsActive", data.IsActive);
                 var res = await _repo.GetData<SKUGVM>("UpdateSKU", parameters);
 
                 return res;
@@ -106,7 +120,7 @@ namespace TechExamAPI.Implementation
             {
                 var parameters = new DynamicParameters();
                 parameters.Add("@SKUId", SKUId);
-                return await _repo.GetData<SKUGVM>("", parameters, commandType: CommandType.StoredProcedure);
+                return await _repo.GetData<SKUGVM>("DeleteSKU", parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception ex)
             {

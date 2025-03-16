@@ -52,21 +52,13 @@ namespace TechExamAPI.Controllers
 
                 var errors = new Dictionary<string, string>();
 
-                //async Task ValidateField(string input, string valType, string fieldName)
-                //{
-                //    var param = new DynamicParameters();
-                //    param.Add("@Input", input);
-                //    param.Add("@ValType", valType);
-                //    var exists = await db.QueryFirstOrDefaultAsync<bool>("ValidateInput", param, commandType: CommandType.StoredProcedure);
-                //    if (exists)
-                //    {
-                //        errors[fieldName] = $"{valType} already exists.";
-                //    }
-                //}
+                var val1 = await _svc.ValidateField(data.SkuCode, "SKU Code", "skuCode");
+                if (val1.FirstOrDefault().Key != null)
+                    errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
 
-                //await ValidateField(data.FirstName, "First Name", "firstName");
-                //await ValidateField(data.LastName, "Last Name", "lastName");
-                //await ValidateField(data.MobileNumber, "Mobile Number", "mobileNumber");
+                val1 = await _svc.ValidateField(data.SkuName, "SKU Name", "skuName");
+                if (val1.FirstOrDefault().Key != null)
+                    errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
 
                 if (errors.Any())
                 {
@@ -75,23 +67,25 @@ namespace TechExamAPI.Controllers
 
                 var res = await _svc.CreateSKU(data);
 
-                if (data.ImageFile == null || data.ImageFile.Length == 0)
+                if (!(data.ImageFile == null || data.ImageFile.Length == 0))
                 {
-                    return BadRequest("Image file is required.");
-                }
+                    string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot/uploads/sku{res.SkuID.ToString("000#")}");
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
 
-                string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot/uploads/sku{res.SkuID.ToString("000#")}");
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
+                    string filePath = Path.Combine(uploadPath, data.ImageFile.FileName);
 
-                string filePath = Path.Combine(uploadPath, data.ImageFile.FileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await data.ImageFile.CopyToAsync(stream);
-                }
-                res.ImagePath = data.ImagePath;
-                res.ImageFile = data.ImageFile;
-                await _svc.UpdateSKUImage(res);
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await data.ImageFile.CopyToAsync(stream);
+                    }
+                    res.ImagePath = data.ImagePath;
+                    res.ImageFile = data.ImageFile;
+                    await _svc.UpdateSKUImage(res);
+                }               
 
                 return Ok(res);
             }
@@ -115,29 +109,40 @@ namespace TechExamAPI.Controllers
 
                 var errors = new Dictionary<string, string>();
 
+                var val1 = await _svc.ValidateField(data.SkuCode, "SKU Code", "skuCode", data.SkuID);
+                if (val1.FirstOrDefault().Key != null)
+                    errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
+
+                val1 = await _svc.ValidateField(data.SkuName, "SKU Name", "skuName", data.SkuID);
+                if (val1.FirstOrDefault().Key != null)
+                    errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
+
                 if (errors.Any())
                 {
                     return BadRequest(new { errors });
                 }
 
                 var res = await _svc.UpdateSKU(data);
-                if (data.ImageFile == null || data.ImageFile.Length == 0)
-                {
-                    return BadRequest("Image file is required.");
-                }
 
-                string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot/uploads/sku{res.SkuID.ToString("000#")}");
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                string filePath = Path.Combine(uploadPath, data.ImageFile.FileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                if (!(data.ImageFile == null || data.ImageFile.Length == 0))
                 {
-                    await data.ImageFile.CopyToAsync(stream);
+                    string uploadPath = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot/uploads/sku{res.SkuID.ToString("000#")}");
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
+
+                    string filePath = Path.Combine(uploadPath, data.ImageFile.FileName);
+
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await data.ImageFile.CopyToAsync(stream);
+                    }
+                    res.ImagePath = data.ImagePath;
+                    res.ImageFile = data.ImageFile;
+                    await _svc.UpdateSKUImage(res);
                 }
-                res.ImagePath = data.ImagePath;
-                res.ImageFile = data.ImageFile;
-                await _svc.UpdateSKUImage(res);
 
                 return Ok(res);
             }

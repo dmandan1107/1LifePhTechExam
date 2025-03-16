@@ -53,10 +53,11 @@ namespace TechExamAPI.Implementation
 
         }
 
-        public async Task<Dictionary<string, string>> ValidateField(string input, string valType, string fieldName)
+        public async Task<Dictionary<string, string>> ValidateField(string input, string valType, string fieldName, int customerId = 0)
         {
             var errors = new Dictionary<string, string>();
             var param = new DynamicParameters();
+            param.Add("@CustomerID", customerId);
             param.Add("@Input", input);
             param.Add("@ValType", valType);
             var exists = await _repo.GetData<bool>("ValidateInput", param);
@@ -78,7 +79,7 @@ namespace TechExamAPI.Implementation
                 parameters.Add("@FullName", data.FullName);
                 parameters.Add("@MobileNumber", data.MobileNumber);
                 parameters.Add("@City", data.City);
-                parameters.Add("@IsActive", data.IsActive);
+                parameters.Add("@IsActive", true);
                 var res = await _repo.GetData<CustomerGVM>("CreateCustomer", parameters);
 
                 return res;
@@ -102,7 +103,6 @@ namespace TechExamAPI.Implementation
                 parameters.Add("@FullName", data.FullName);
                 parameters.Add("@MobileNumber", data.MobileNumber);
                 parameters.Add("@City", data.City);
-                parameters.Add("@IsActive", data.IsActive);
                 var res = await _repo.GetData<CustomerGVM>("UpdateCustomer", parameters);
 
                 return res;
@@ -120,7 +120,7 @@ namespace TechExamAPI.Implementation
         {
             var parameters = new DynamicParameters();
             parameters.Add("@customerId", customerId);
-            return await _repo.GetData<CustomerGVM>("", parameters, commandType: CommandType.StoredProcedure);
+            return await _repo.GetData<CustomerGVM>("DeleteCustomer", parameters, commandType: CommandType.StoredProcedure);
         }
     }
 }

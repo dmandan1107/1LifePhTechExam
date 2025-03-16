@@ -41,7 +41,7 @@
         $('#modalTitle').text('Add SKU');
         $('#skuId').val('');
         $('#skuName, #skuCode, #unitPrice').val('');
-        $('#isActive').prop('checked', false);
+        $('#isActive').prop('checked', true);
         $('#imagePreview').attr('src', '').hide();
         $('#imagePreview').hide();
         $('#skuModal').modal('show');
@@ -105,7 +105,8 @@
         if (!isValid) return;
 
         let method = $('#skuId').val() == 0 ? 'POST' : 'PUT';
-            let url = $('#skuId').val() == 0 ? 'https://localhost:7263/api/SKU/CreateSKU' : 'https://localhost:7263/api/SKU/UpdateSKU';
+            let url = $('#skuId').val() == 0 ? 'https://localhost:7263/api/SKU/CreateSKU' 
+                                            : 'https://localhost:7263/api/SKU/UpdateSKU';
 
         $.ajax({
             url: url,
@@ -116,10 +117,16 @@
             success: function () {
                 $('#skuModal').modal('hide');
                 loadSKU();
-            },
-            error: function () {
-                alert("Failed to save the SKU.");
-            }
+                },
+                    error: function (xhr) {
+                        if (xhr.status === 400) {
+                            let errors = xhr.responseJSON.errors;
+                                if (errors.skuName) $("#skuName").next(".text-danger").text(errors.skuName);
+                                if (errors.skuCode) $("#skuCode").next(".text-danger").text(errors.skuCode);
+                            } else {
+                            alert("Failed to save the sku.");
+                        }
+                    }
         });
     });
 

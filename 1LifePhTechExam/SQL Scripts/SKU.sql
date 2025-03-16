@@ -12,7 +12,7 @@ CREATE TABLE SKU (
 	UpdatedBy NVARCHAR(50) DEFAULT('User')
 );
 
-GO;
+GO
 CREATE OR ALTER PROCEDURE GetSKU
 	@SkuID INT
 AS
@@ -20,12 +20,14 @@ BEGIN
 	SELECT * FROM SKU WHERE SkuID = @SkuID
 END;
 
+GO
 CREATE OR ALTER PROCEDURE GetAllSKU
 AS
 BEGIN
 	SELECT * FROM SKU;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE ValidateSKUInput
 	@SkuID INT = NULL,
     @Input NVARCHAR(50),
@@ -33,37 +35,31 @@ CREATE OR ALTER PROCEDURE ValidateSKUInput
 AS
 BEGIN
     SET NOCOUNT ON;
-	/*
-    IF @ValType = 'First Name'
+	
+    IF @ValType = 'SKU Code'
     BEGIN
-        IF EXISTS (SELECT 1 FROM SKU WHERE FirstName = @Input AND CustomerID <> @CustomerID)
+        IF EXISTS (SELECT 1 FROM SKU WHERE SkuCode = @Input AND SkuID <> @SkuID)
         BEGIN
-            PRINT 'First Name already exists';
-            RETURN 1;
+            PRINT 'SKU Code already exists';
+            SELECT 1;
+			RETURN;
         END
     END
 
-	IF @ValType = 'Last Name'
+	IF @ValType = 'SKU Name'
     BEGIN
-        IF EXISTS (SELECT 1 FROM SKU WHERE LastName = @Input AND CustomerID <> @CustomerID)
+        IF EXISTS (SELECT 1 FROM SKU WHERE SkuName = @Input AND SkuID <> @SkuID)
         BEGIN
-            PRINT 'Last Name already exists';
-            RETURN 1;
+            PRINT 'SKU Name already exists';
+            SELECT 1;
+			RETURN;
         END
     END
-
-	IF @ValType = 'Mobile Number'
-    BEGIN
-        IF EXISTS (SELECT 1 FROM SKU WHERE MobileNumber = @Input AND CustomerID <> @CustomerID)
-        BEGIN
-            PRINT 'Mobile Number already exists';
-            RETURN 1;
-        END
-    END
-	*/
+	
     RETURN 0;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE UpdateSKUImage
     @SkuID INT,
     @FileName NVARCHAR(255)
@@ -80,6 +76,7 @@ BEGIN
     WHERE SKUID = @SkuID;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE CreateSKU
 	@SkuName NVARCHAR(50),
 	@SkuCode NVARCHAR(50),
@@ -95,33 +92,32 @@ BEGIN
 	SELECT * FROM SKU WHERE SkuID = @SkuID;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE [dbo].[UpdateSKU]
 	@SkuID INT,
 	@SkuName NVARCHAR(50),
 	@SkuCode NVARCHAR(50),
-	@UnitPrice money,
-	@IsActive bit
+	@UnitPrice money
 AS
 BEGIN
 	UPDATE SKU
 	SET SkuName = @SkuName,
 	SkuCode = @SkuCode,
 	UnitPrice = @UnitPrice,
-	IsActive = @IsActive,
 	UpdatedDate = GETDATE()
 	WHERE SkuID = @SkuID;
 
 	SELECT * FROM SKU WHERE SkuID = @SkuID;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE DeleteSKU
-	@SkuID INT,
-	@IsActive bit
+	@SkuID INT
 AS
 BEGIN
 	UPDATE SKU
 	SET 
-	IsActive = @IsActive,
+	IsActive = 0,
 	UpdatedDate = GETDATE()
 	WHERE SkuID = @SkuID
 END;

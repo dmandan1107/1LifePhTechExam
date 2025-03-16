@@ -2,7 +2,6 @@
 <script>
     $(document).ready(function () {
         function loadCustomers() {
-            // Example AJAX GET request (change URL accordingly)
             $.ajax({
                 url: 'https://localhost:7263/api/Customer/getAllCustomer',
                 method: 'GET',
@@ -29,7 +28,7 @@
             $('#modalTitle').text('Add Customer');
             $('#customerId').val('');
             $('#firstName, #lastName, #mobileNumber, #city').val('');
-            $('#isActive').prop('checked', false);
+            $('#isActive').prop('checked', true);
             $('#customerModal').modal('show');
         });
 
@@ -60,16 +59,13 @@
                 customerId: $('#customerId').val() || 0,
                 FirstName: $('#firstName').val(),
                 LastName: $('#lastName').val(),
-                FullName: $('#firstName').val() + ' ' + $('#lastName').val(),
+                FullName: $('#lastName').val() + ', ' + $('#firstName').val(),
                 MobileNumber: $('#mobileNumber').val(),
                 City: $('#city').val(),
-                IsActive: $('#isActive').is(':checked')
             };
 
-            // Clear previous errors
             $(".text-danger").text("");
 
-            // Client-side validation
             let isValid = true;
             if (!customer.FirstName.trim()) {
                 $("#firstNameError").text("First name is required.");
@@ -105,6 +101,7 @@
                 error: function (xhr) {
                     if (xhr.status === 400) {
                         let errors = xhr.responseJSON.errors;
+                        if (errors.fullName) alert(errors.fullName);
                         if (errors.firstName) $("#firstName").next(".text-danger").text(errors.firstName);
                         if (errors.lastName) $("#lastName").next(".text-danger").text(errors.lastName);
                         if (errors.mobileNumber) $("#mobileNumber").next(".text-danger").text(errors.mobileNumber);
@@ -120,12 +117,27 @@
             if (confirm('Are you sure you want to delete this customer?')) {
                 let id = $(this).data('id');
                 $.ajax({
-                    url: `https://localhost:7263/api/Customer/DeleteCustomer/${id}`,
+                    url: `https://localhost:7263/api/Customer/DeleteCustomer?customerId=${id}`,
                     method: 'DELETE',
                     success: function () {
                         loadCustomers();
+                    },
+                    error: function (xhr) {
+                        alert("Failed to delete the customer.");
                     }
                 });
+            }
+        });
+
+        $(".numericInput").keypress(function (event) {
+            var keyCode = event.which ? event.which : event.keyCode;
+
+            if (keyCode === 8 || keyCode === 46 || keyCode === 37 || keyCode === 39) {
+                return;
+            }
+
+            if (keyCode < 48 || keyCode > 57) {
+                event.preventDefault();
             }
         });
 

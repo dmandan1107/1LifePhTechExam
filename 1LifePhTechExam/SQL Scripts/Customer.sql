@@ -11,6 +11,7 @@ CREATE TABLE Customer (
 	UpdatedDate DateTime
 );
 
+GO
 CREATE OR ALTER PROCEDURE GetCustomer
 	@CustomerID INT
 AS
@@ -18,12 +19,14 @@ BEGIN
 	SELECT * FROM Customer WHERE CustomerID = @CustomerID
 END;
 
+GO
 CREATE OR ALTER PROCEDURE GetAllCustomer
 AS
 BEGIN
 	SELECT * FROM Customer;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE ValidateInput
 	@CustomerID INT = NULL,
     @Input NVARCHAR(50),
@@ -37,7 +40,8 @@ BEGIN
         IF EXISTS (SELECT 1 FROM Customer WHERE FirstName = @Input AND CustomerID <> @CustomerID)
         BEGIN
             PRINT 'First Name already exists';
-            RETURN 1;
+            SELECT 1;
+			RETURN;
         END
     END
 
@@ -46,7 +50,18 @@ BEGIN
         IF EXISTS (SELECT 1 FROM Customer WHERE LastName = @Input AND CustomerID <> @CustomerID)
         BEGIN
             PRINT 'Last Name already exists';
-            RETURN 1;
+            SELECT 1;
+			RETURN;
+        END
+    END
+
+	IF @ValType = 'Full Name'
+    BEGIN
+        IF EXISTS (SELECT 1 FROM Customer WHERE FullName = @Input AND CustomerID <> @CustomerID)
+        BEGIN
+            PRINT 'Customer name already exists';
+            SELECT 1;
+			RETURN;
         END
     END
 
@@ -55,14 +70,15 @@ BEGIN
         IF EXISTS (SELECT 1 FROM Customer WHERE MobileNumber = @Input AND CustomerID <> @CustomerID)
         BEGIN
             PRINT 'Mobile Number already exists';
-            RETURN 1;
+            SELECT 1;
+			RETURN;
         END
     END
 
     RETURN 0;
 END
 
-
+GO
 CREATE OR ALTER PROCEDURE CreateCustomer
 	@FirstName NVARCHAR(50),
 	@LastName NVARCHAR(50),
@@ -80,14 +96,14 @@ BEGIN
 	SELECT * FROM Customer WHERE CustomerID = @CustomerID;
 END;
 
+GO
 CREATE OR ALTER PROCEDURE UpdateCustomer
 	@CustomerID INT,
 	@FirstName NVARCHAR(50),
 	@LastName NVARCHAR(50),
 	@FullName NVARCHAR(50),
 	@MobileNumber NVARCHAR(10),
-	@City NVARCHAR(255),
-	@IsActive bit
+	@City NVARCHAR(255)
 AS
 BEGIN
 	UPDATE Customer
@@ -96,19 +112,18 @@ BEGIN
 	FullName = @FullName,
 	MobileNumber = @MobileNumber,
 	City = @City,
-	IsActive = @IsActive,
 	UpdatedDate = GETDATE()
 	WHERE CustomerID = @CustomerID
 END;
 
+GO
 CREATE OR ALTER PROCEDURE DeleteCustomer
-	@CustomerID INT,
-	@IsActive bit
+	@CustomerID INT
 AS
 BEGIN
 	UPDATE Customer
 	SET 
-	IsActive = @IsActive,
+	IsActive = 0,
 	UpdatedDate = GETDATE()
 	WHERE CustomerID = @CustomerID
 END;

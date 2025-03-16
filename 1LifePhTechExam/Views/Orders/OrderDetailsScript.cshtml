@@ -3,7 +3,7 @@ $(document).ready(function () {
     let skuList = []
     let curRowId = '';
     //START - Customer Search
-    $("#customerName").on("input focus", function () {
+    $("#customerName").on("input focus click", function () {
         let query = $(this).val();
 
         if (query.length > 0 && query != '' && query != null) {
@@ -43,7 +43,7 @@ $(document).ready(function () {
     //END - Customer Search
 
     //START - SKU Search
-    $("#skuName").on("input focus", function () {
+    $("#skuName").on("input focus click", function () {
         let query = $(this).val();
 
         if (query.length > 0 && query != '' && query != null) {
@@ -80,6 +80,7 @@ $(document).ready(function () {
     $(document).on("click", "#skuSuggestions .list-group-item", function () {
         $('#skuId').val($(this).data("id"));
         $("#skuName").val($(this).data("name"));
+        $("#skuName").data('name', $(this).data("name"));
         $('#quantity').data('price', $(this).data("price"))        
         $("#quantity").blur();
         $("#skuSuggestions").hide();
@@ -96,88 +97,12 @@ $(document).ready(function () {
     });
     //END - SKU Search
 
-    let tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    let minDateTime = tomorrow.toISOString().slice(0, 16);
-
-    $("#deliveryDate").attr("min", minDateTime);
-
-    function loadOrders() {
-        $.ajax({
-            url: "https://localhost:7263/api/Order/GetAllOrder",
-            method: 'GET',
-            success: function (data) {
-                let rows = '';
-                data.forEach(c => {
-                    rows += `<tr>
-                                <td>${c.customerName}</td>
-                                <td>${new Date(c.dateOfDelivery).toLocaleDateString()}</td >
-                                <td>${c.status}</td>
-                                <td>${moneyFormat(c.amountDue)}</td>
-                                <td>
-                                    <button class='btn btn-warning btnEdit' data-id='${c.purchaseOrderID}'>Edit</button>
-                                </td>
-                            </tr>`;
-                });
-                $('#orderTableBody').html(rows);
-            }
-        });
-    }
-
-    $('#btnAdd').click(function () {
-        // $('#modalTitle').text('Add Order');
-        // $('#purchaseOrderID, #customerId, #customerName, #deliveryDate').val('');
-        // $('#status').val('New');     
-        // $('#status').attr('disabled', true);
-        // skuList = [];
-        // loadOrdersList();
-        // $('#orderModal').modal('show');
-
-        location.href = '/Orders/OrderDetails';
-    });
-
     $('#btnAddItem').click(function () {        
         $('#skuName').val('');
+        $("#skuName").data('name', '');
         $('#quantity, #totalPrice').val('0');
         curRowId = '';
         $('#addItemModal').modal('show');
-    });
-
-    $(document).on('click', '.btnEdit', function () {
-        let id = $(this).data('id');
-        location.href = `/Orders/OrderDetails?purchaseOrderID=${id}`;
-        // skuList = [];
-        // $.ajax({
-        //         url: `https://localhost:7263/api/Order/getOrderDetails?purchaseOrderID=${id}`,
-        //     method: 'GET',
-        //     success: function (c) {
-        //         $('#modalTitle').text('Edit Order');
-        //         $('#purchaseOrderID').val(c.purchaseOrderID);
-        //         $('#customerId').val(c.customerID);
-        //         $('#customerName').val(c.customerName);
-        //         $('#deliveryDate').val(c.deliveryDate);
-        //         $('#status').val(c.status);    
-
-        //         c.purchaseItems.forEach((i, index) => {
-        //             skuList.push({
-        //                 rowId: skuList.length,
-        //                 skuId: i.skuId, 
-        //                 skuName: i.skuName, 
-        //                 unitPrice: i.unitPrice, 
-        //                 quantity: i.quantity, 
-        //                 totalPrice: i.totalPrice
-        //             });
-        //         });
-
-        //         loadOrdersList();
-
-        //         $('#orderModal').modal('show');
-        //     },
-        //     error: function () {
-        //         alert("Failed to fetch the SKU data.");
-        //     }
-        // });
     });
 
     $(document).on('click', '.btnEditItem', function () {
@@ -187,6 +112,7 @@ $(document).ready(function () {
         if (item) {
             $('#skuId').val(item.skuId);
             $('#skuName').val(item.skuName);
+            $("#skuName").data('name', item.skuName);
             $('#quantity').data('price', item.unitPrice)
             $('#quantity').val(item.quantity);
         }
@@ -195,39 +121,47 @@ $(document).ready(function () {
     });
 
     $('#btnSaveItem').click(function () {
-        if (curRowId === '') {
-            skuList.push({
-            rowId: skuList.length,
-            skuId: $('#skuId').val(), 
-            skuName: $('#skuName').val(), 
-            unitPrice: $('#quantity').data('price'), 
-            quantity: $('#quantity').val(), 
-            totalPrice: ($('#quantity').val() * $('#quantity').data('price')) });           
+        if ($('#skuId').val() != '') {
+            if (curRowId === '') {
+                skuList.push({
+                    rowId: skuList.length,
+                    skuId: $('#skuId').val(),
+                    skuName: $("#skuName").data('name'),
+                    unitPrice: $('#quantity').data('price'),
+                    quantity: $('#quantity').val(),
+                    totalPrice: ($('#quantity').val() * $('#quantity').data('price'))
+                });
+            }
+            else {
+                let item = skuList.find(i => i.rowId === curRowId);
+
+                if (item) {
+                    item.skuId = $('#skuId').val();
+                    item.skuName = $("#skuName").data('name');
+                    item.unitPrice = $('#quantity').data('price')
+                    item.quantity = $('#quantity').val();
+                    item.totalPrice = ($('#quantity').val() * $('#quantity').data('price'));
+                }
+            }
+
+            loadOrdersList();
+
+            $('#addItemModal').modal('hide');
         }
         else {
-            let item = skuList.find(i => i.rowId === curRowId);
-    
-            if (item) {
-                item.skuId = $('#skuId').val();
-                item.skuName = $('#skuName').val();
-                item.unitPrice = $('#quantity').data('price')
-                item.quantity = $('#quantity').val();
-                item.totalPrice = ($('#quantity').val() * $('#quantity').data('price'));
-            }
+            alert('no item selected');
         }
-
-        loadOrdersList();
         
-        $('#addItemModal').modal('hide');
     });
 
     $('#btnSave').click(function () {     
 
-        if ($('#purchaseOrderID').val() == '') {
+        if ($('#purchaseOrderID').val() == '-1') {
             let orderDetails = {
                 customerID: $('#customerId').val(),
                 customerName: $('#customerName').val(),
                 status: $('#status').val(),
+                dateOfDelivery: $('#deliveryDate').val(),
                 amountDue: $('#amountDue').data('amountdue'),
                 purchaseItems: skuList
             };  
@@ -240,8 +174,7 @@ $(document).ready(function () {
                 data: JSON.stringify(orderDetails),
                 success: function () {
                     alert("Order Created.");
-                    loadOrders();
-                    $('#orderModal').modal('hide');
+                    location.href = '/Orders/';
                 },
                 error: function () {
                     alert("Failed to save the Order.");
@@ -267,8 +200,7 @@ $(document).ready(function () {
                 data: JSON.stringify(orderDetails),
                 success: function () {
                 alert("Order Updated.");
-                loadOrders();
-                $('#orderModal').modal('hide');
+                location.href = '/Orders/';
             },
             error: function () {
                 alert("Failed to save the Order.");
@@ -286,6 +218,37 @@ $(document).ready(function () {
             loadOrdersList();
         }
     });
+
+    function loadOrderDetails() {
+        skuList = [];
+        $.ajax({
+                url: `https://localhost:7263/api/Order/getOrderDetails?purchaseOrderID=${$('#purchaseOrderID').val()}`,
+            method: 'GET',
+            success: function (c) {
+                $('#modalTitle').text('Edit Order');
+                $('#purchaseOrderID').val(c.purchaseOrderID);
+                $('#customerId').val(c.customerID);
+                $('#customerName').val(c.customerName);
+                    $('#deliveryDate').val(c.dateOfDelivery.split("T")[0]);
+                $('#status').val(c.status);    
+                c.purchaseItems.forEach((i, index) => {
+                    skuList.push({
+                        rowId: skuList.length,
+                        skuId: i.skuId, 
+                        skuName: i.skuName, 
+                        unitPrice: i.unitPrice, 
+                        quantity: i.quantity, 
+                        totalPrice: i.totalPrice
+                    });
+                });
+
+                loadOrdersList();
+            },
+            error: function () {
+                alert("Failed to fetch the SKU data.");
+            }
+        });
+    }
 
     function loadOrdersList() {
         let rows = ""; 
@@ -313,7 +276,20 @@ $(document).ready(function () {
         return input.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     }
 
-    loadOrders();
+    let tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    let minDate = tomorrow.toISOString().split("T")[0];
+
+    if ($('#purchaseOrderID').val() != '-1') {
+        $("#customerName").attr('readonly', true);
+        $("#deliveryDate").attr('readonly', true);
+        loadOrderDetails();
+    }
+    else {
+        $("#deliveryDate").attr("min", minDate);
+        $("#deliveryDate").val(minDate);
+    }
+    
 });
 
 </script>

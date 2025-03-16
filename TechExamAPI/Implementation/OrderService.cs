@@ -64,7 +64,7 @@ namespace TechExamAPI.Implementation
             {
                 var param = new DynamicParameters();
                 param.Add("@customerID", data.customerID);
-                param.Add("@DateOfDelivery", DateTime.Now);
+                param.Add("@DateOfDelivery", data.dateOfDelivery);
                 param.Add("@status", data.status);
                 param.Add("@amountDue", data.amountDue);
                 param.Add("@isActive", true);

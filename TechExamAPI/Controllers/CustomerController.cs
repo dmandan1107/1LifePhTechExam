@@ -69,17 +69,14 @@ namespace TechExamAPI.Controllers
 
                 var errors = new Dictionary<string, string>();
 
-                var val1 = await _svc.ValidateField(data.FirstName, "First Name", "firstName");
+                var val1 = await _svc.ValidateField(data.MobileNumber, "Mobile Number", "mobileNumber");
                 if (val1.FirstOrDefault().Key != null)
                     errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
 
-                var val2 = await _svc.ValidateField(data.LastName, "Last Name", "lastName");
-                if (val2.FirstOrDefault().Key != null)
-                    errors.Add(val2.FirstOrDefault().Key, val2.FirstOrDefault().Value);
+                val1 = await _svc.ValidateField(data.FullName, "Full Name", "fullName");
+                if (val1.FirstOrDefault().Key != null)
+                    errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
 
-                var val3 = await _svc.ValidateField(data.MobileNumber, "Mobile Number", "mobileNumber");
-                if (val3.FirstOrDefault().Key != null)
-                    errors.Add(val3.FirstOrDefault().Key, val3.FirstOrDefault().Value);
 
                 if (errors.Any())
                 {
@@ -110,17 +107,13 @@ namespace TechExamAPI.Controllers
 
                 var errors = new Dictionary<string, string>();
 
-                var val1 = await _svc.ValidateField(data.FirstName, "First Name", "firstName");
+                var val1 = await _svc.ValidateField(data.MobileNumber, "Mobile Number", "mobileNumber", data.customerId);
                 if (val1.FirstOrDefault().Key != null)
                     errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
 
-                var val2 = await _svc.ValidateField(data.LastName, "Last Name", "lastName");
-                if (val2.FirstOrDefault().Key != null)
-                    errors.Add(val2.FirstOrDefault().Key, val2.FirstOrDefault().Value);
-
-                var val3 = await _svc.ValidateField(data.MobileNumber, "Mobile Number", "mobileNumber");
-                if (val3.FirstOrDefault().Key != null)
-                    errors.Add(val3.FirstOrDefault().Key, val3.FirstOrDefault().Value);
+                val1 = await _svc.ValidateField(data.FullName, "Full Name", "fullName", data.customerId);
+                if (val1.FirstOrDefault().Key != null)
+                    errors.Add(val1.FirstOrDefault().Key, val1.FirstOrDefault().Value);
 
                 if (errors.Any())
                 {
@@ -143,7 +136,16 @@ namespace TechExamAPI.Controllers
         [HttpDelete("deleteCustomer")]
         public async Task<CustomerGVM> DeleteCustomer(int customerId)
         {
-            return await _svc.DeleteCustomer(customerId);
+            try
+            {
+                return await _svc.DeleteCustomer(customerId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                throw new Exception("Failed to delete the data");
+            }
+            
         }
     }
 }

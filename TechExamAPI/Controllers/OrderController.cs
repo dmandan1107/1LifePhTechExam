@@ -29,10 +29,10 @@ namespace TechExamAPI.Controllers
             if (!string.IsNullOrEmpty(search))
             {
                 res = res.Where(a => a.FullName.ToUpper().Contains(search.ToUpper()) && a.IsActive).ToList();
-                return res;
+                return res.Take(10).ToList();
             }
 
-            return res;
+            return res.Take(10).ToList();
         }
 
         [HttpGet("getAllSKU")]
@@ -43,10 +43,10 @@ namespace TechExamAPI.Controllers
             if (!string.IsNullOrEmpty(search))
             {
                 res = res.Where(a => a.SkuName.ToUpper().Contains(search.ToUpper()) && a.IsActive).ToList();
-                return res;
+                return res.Take(10).ToList();
             }
 
-            return res;
+            return res.Take(10).ToList();
         }
 
         [HttpGet("getOrderDetails")]

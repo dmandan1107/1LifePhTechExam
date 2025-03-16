@@ -1,0 +1,93 @@
+﻿<div class="container mt-4">
+    <h2>Order Details</h2>
+    <input type="hidden" id="purchaseOrderID" value="@ViewBag.purchaseOrderID">
+
+    <div class="mb-3">
+        <label>Customer</label>
+        <input type="hidden" id="customerId">
+        <input type="text" class="form-control" id="customerName" autocomplete="off">
+        <div class="text-danger" id="customerNameError"></div>
+        <div id="customerSuggestions" class="list-group" style="position: absolute; z-index: 1000; display: none;"></div>
+    </div>
+    <div class="mb-3">
+        <label>Delivery Date</label>
+        <input type="date" class="form-control" id="deliveryDate">
+        <div class="text-danger" id="deliveryDateError"></div>
+    </div>
+    <div class="mb-3">
+        <label for="status">Status</label>
+        <select class="form-control" id="status">
+            <option value="New">New</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+        </select>
+        <div class="text-danger" id="statusError"></div>
+    </div>
+    <div class="mb-3">
+        <button class="btn btn-primary mb-3" id="btnAddItem">Add Item</button>
+    </div>
+    <div class="mb-3">
+        <table id="tblPurchaseOrderItem" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tblPurchaseOrderItemBody">
+            </tbody>
+        </table>
+    </div>
+    <div class="mb-3">
+        <label>Total Amount Due</label>
+        <input type="text" readonly class="form-control" id="amountDue" value="0" data-amountDue="0">
+    </div>
+    <div class="mb-3">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="btnSave">Save</button>
+    </div>
+</div>
+
+<div class="modal fade" id="addItemModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>SKU Name</label>
+                    <input type="hidden" id="skuId">
+                    <input type="text" class="form-control" id="skuName" data-name="">
+                    <div class="text-danger" id="skuNameError"></div>
+                    <div id="skuSuggestions" class="list-group" style="position: absolute; z-index: 1000; display: none;"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Quantity</label>
+                    <input type="number" class="form-control" id="quantity" data-price="1" min="1">                    
+                </div>
+                <div class="mb-3">
+                    <label>Total Price</label>
+                    <input type="text" class="form-control" id="totalPrice" readonly>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="btnSaveItem">Save Item</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section scripts {
+    @{
+
+        await Html.RenderPartialAsync("OrderDetailsScript", null);
+
+    }
+}

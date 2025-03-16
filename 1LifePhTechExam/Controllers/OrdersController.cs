@@ -18,38 +18,47 @@ namespace _1LifePhTechExam.Controllers
         {
             return View();
         }
-        public async Task<List<CustomerGVM>> GetAllCustomer(string search = "")
+
+        public IActionResult OrderDetails(int? purchaseOrderID = -1)
         {
-            using var db = new SqlConnection(_connectionString);
-            var res = (await db.QueryAsync<CustomerGVM>("GetAllCustomer", null, commandType: CommandType.StoredProcedure)).ToList();
-
-            if (!string.IsNullOrEmpty(search))
-            { 
-                res = res.Where(a => a.FullName.ToUpper().Contains(search.ToUpper()) && a.IsActive).ToList();
-                return res;
-            }
-
-            return res;
+            ViewBag.purchaseOrderID = purchaseOrderID;
+            return View();
         }
 
-        public async Task<List<SKUGVM>> GetAllSKU(string search = "")
-        {
-            using var db = new SqlConnection(_connectionString);
-            var res = (await db.QueryAsync<SKUGVM>("GetAllSKU", null, commandType: CommandType.StoredProcedure)).ToList();
+        #region oldcodes
+        //public async Task<List<CustomerGVM>> GetAllCustomer(string search = "")
+        //{
+        //    using var db = new SqlConnection(_connectionString);
+        //    var res = (await db.QueryAsync<CustomerGVM>("GetAllCustomer", null, commandType: CommandType.StoredProcedure)).ToList();
 
-            if (!string.IsNullOrEmpty(search))
-            {
-                res = res.Where(a => a.SkuName.ToUpper().Contains(search.ToUpper()) && a.IsActive).ToList();
-                return res;
-            }
+        //    if (!string.IsNullOrEmpty(search))
+        //    { 
+        //        res = res.Where(a => a.FullName.ToUpper().Contains(search.ToUpper()) && a.IsActive).ToList();
+        //        return res;
+        //    }
 
-            return res;
-        }
+        //    return res;
+        //}
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] vwPurchaseOrdersGVM data)
-        {
-            return Ok();
-        }
+        //public async Task<List<SKUGVM>> GetAllSKU(string search = "")
+        //{
+        //    using var db = new SqlConnection(_connectionString);
+        //    var res = (await db.QueryAsync<SKUGVM>("GetAllSKU", null, commandType: CommandType.StoredProcedure)).ToList();
+
+        //    if (!string.IsNullOrEmpty(search))
+        //    {
+        //        res = res.Where(a => a.SkuName.ToUpper().Contains(search.ToUpper()) && a.IsActive).ToList();
+        //        return res;
+        //    }
+
+        //    return res;
+        //}
+
+        //[HttpPost]
+        //public async Task<IActionResult> Create([FromBody] vwPurchaseOrdersGVM data)
+        //{
+        //    return Ok();
+        //}
+        #endregion
     }
 }
