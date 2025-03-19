@@ -93,7 +93,6 @@ GO
 CREATE OR ALTER PROCEDURE UpdatePurchaseOrder
 	@PurchaseOrderID INT,
 	@CustomerID INT,
-	@DateOfDelivery DateTime,
 	@Status NVARCHAR(50),
 	@AmountDue money,
 	@IsActive bit,
@@ -102,7 +101,6 @@ AS
 BEGIN
 	UPDATE PurchaseOrder
 	SET CustomerID = @CustomerID,
-		DateOfDelivery = @DateOfDelivery,
 		Status = @Status,
 		AmountDue = @AmountDue,
 		IsActive = @IsActive

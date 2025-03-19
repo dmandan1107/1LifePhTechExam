@@ -250,6 +250,10 @@ $(document).ready(function () {
         });
     }
 
+    $('#btnClose').on('click', function () {
+            location.href = '/Orders/';
+    });
+
     function loadOrdersList() {
         let rows = ""; 
         let totalAmountDue = 0;

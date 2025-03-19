@@ -8,7 +8,9 @@ CREATE TABLE Customer (
 	City NVARCHAR(255) NOT NULL,
 	IsActive bit NOT NULL,
 	CreatedDate DateTime DEFAULT(GETDATE()),
-	UpdatedDate DateTime
+	CreatedBy NVARCHAR(50) DEFAULT('User'),
+	UpdatedDate DateTime,
+	UpdatedBy NVARCHAR(50) DEFAULT('User')
 );
 
 GO

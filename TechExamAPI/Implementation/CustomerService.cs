@@ -1,26 +1,27 @@
 ﻿using CommonLibrary.Models;
 using Dapper;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using TechExamAPI.Application.Customer.Command;
+using TechExamAPI.Application.Customer.Querry;
 using TechExamAPI.Interface;
 
 namespace TechExamAPI.Implementation
 {
     public class CustomerService : ICustomerService
     {
-        public IRepositoryService _repo;
-        public CustomerService(IRepositoryService repo)
+        public IMediator _mediatr;
+        public CustomerService(IMediator mediator)
         {
-            _repo = repo;
+            _mediatr = mediator;
         }
 
         public async Task<CustomerGVM> GetCustomer(int customerId)
         {
             try
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("@CustomerID", customerId);
-                var res = await _repo.GetData<CustomerGVM>("GetCustomer", parameters);
+                var res = await _mediatr.Send(new GetDataQuerry(customerId));
                 return res;
             }
             catch (Exception ex)
@@ -34,7 +35,7 @@ namespace TechExamAPI.Implementation
         {
             try
             {
-                var res = await _repo.GetAllData<CustomerGVM>("GetAllCustomer");
+                var res = await _mediatr.Send(new GetAllDataQuerry());
                 if (!string.IsNullOrEmpty(search))
                 {
                     res = res.Where(a => a.FullName.ToUpper().Contains(search.ToUpper())).ToList();
@@ -48,39 +49,18 @@ namespace TechExamAPI.Implementation
                 Console.WriteLine(ex.Message);
                 throw new Exception("Failed to fetch the data");
             }
-
-
-
         }
 
         public async Task<Dictionary<string, string>> ValidateField(string input, string valType, string fieldName, int customerId = 0)
         {
-            var errors = new Dictionary<string, string>();
-            var param = new DynamicParameters();
-            param.Add("@CustomerID", customerId);
-            param.Add("@Input", input);
-            param.Add("@ValType", valType);
-            var exists = await _repo.GetData<bool>("ValidateInput", param);
-            if (exists)
-            {
-                errors[fieldName] = $"{valType} already exists.";
-            }
-
-            return errors;
+            return await _mediatr.Send(new ValidateFieldQuerry(input, valType, fieldName, customerId));
         }
 
         public async Task<CustomerGVM> CreateCustomer([FromBody] CustomerGVM data)
         {
             try
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("@FirstName", data.FirstName);
-                parameters.Add("@LastName", data.LastName);
-                parameters.Add("@FullName", data.FullName);
-                parameters.Add("@MobileNumber", data.MobileNumber);
-                parameters.Add("@City", data.City);
-                parameters.Add("@IsActive", true);
-                var res = await _repo.GetData<CustomerGVM>("CreateCustomer", parameters);
+                var res = await _mediatr.Send(new CreateCommand(data));
 
                 return res;
             }
@@ -96,14 +76,7 @@ namespace TechExamAPI.Implementation
         {
             try
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("@customerId", data.customerId);
-                parameters.Add("@FirstName", data.FirstName);
-                parameters.Add("@LastName", data.LastName);
-                parameters.Add("@FullName", data.FullName);
-                parameters.Add("@MobileNumber", data.MobileNumber);
-                parameters.Add("@City", data.City);
-                var res = await _repo.GetData<CustomerGVM>("UpdateCustomer", parameters);
+                var res = await _mediatr.Send(new UpdateCommand(data));
 
                 return res;
             }
@@ -118,9 +91,8 @@ namespace TechExamAPI.Implementation
 
         public async Task<CustomerGVM> DeleteCustomer(int customerId)
         {
-            var parameters = new DynamicParameters();
-            parameters.Add("@customerId", customerId);
-            return await _repo.GetData<CustomerGVM>("DeleteCustomer", parameters, commandType: CommandType.StoredProcedure);
+            var res = await _mediatr.Send(new DeleteCommand(customerId));
+            return res;
         }
     }
 }

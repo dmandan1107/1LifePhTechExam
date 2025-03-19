@@ -2,32 +2,32 @@
 using Dapper;
 using System.Text.Json;
 using TechExamAPI.Interface;
-
+using MediatR;
+using TechExamAPI.Application.Order.Querry;
+using TechExamAPI.Application.Order.Command;
 namespace TechExamAPI.Implementation
 {
     public class OrderService : IOrderService
     {
-        public IRepositoryService _repo;
+        public readonly IMediator _mediatr;
         JsonSerializerOptions options;
 
-        public OrderService(IRepositoryService repo)
+        public OrderService(IMediator mediator)
         {
-            _repo = repo;
+            _mediatr = mediator;
             options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
-        }        
+        }
 
         public async Task<vwPurchaseOrdersGVM> GetOrder(int id)
         {
             try
-            {
-                var parameters = new DynamicParameters();
-                parameters.Add("@PurchaseOrderID", id);
-                var res = await _repo.GetData<vwPurchaseOrdersGVM>("GetPurchaseOrder", parameters);
+            {;
+                var res = await _mediatr.Send(new GetDataQuerry(id));
                 res.purchaseItems = string.IsNullOrEmpty(res.purchaseItemJson) ?
-                                        new List<PurchaseItemGVM>() : 
+                                        new List<PurchaseItemGVM>() :
                                         JsonSerializer.Deserialize<List<PurchaseItemGVM>>(res.purchaseItemJson, options);
                 res.purchaseItemJson = "";
                 return res;
@@ -35,7 +35,7 @@ namespace TechExamAPI.Implementation
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                throw new Exception("Failed to fetch the data");
+                throw;
             }
         }
 
@@ -43,7 +43,7 @@ namespace TechExamAPI.Implementation
         {
             try
             {
-                var res = await _repo.GetAllData<vwPurchaseOrdersGVM>("GetAllPurchaseOrder");
+                var res = await _mediatr.Send(new GetAllDataQuerry());
                 res.ForEach(v => v.purchaseItems = 
                             string.IsNullOrEmpty(v.purchaseItemJson) ? 
                             new List<PurchaseItemGVM>() : 
@@ -62,14 +62,7 @@ namespace TechExamAPI.Implementation
         {
             try
             {
-                var param = new DynamicParameters();
-                param.Add("@customerID", data.customerID);
-                param.Add("@DateOfDelivery", data.dateOfDelivery);
-                param.Add("@status", data.status);
-                param.Add("@amountDue", data.amountDue);
-                param.Add("@isActive", true);
-                param.Add("@purchaseItemJson", JsonSerializer.Serialize(data.purchaseItems));
-                var res = await _repo.GetData<vwPurchaseOrdersGVM>("CreateNewPurchaseOrder", param);
+                var res = await _mediatr.Send(new CreateCommand(data));
 
                 return res;
 
@@ -85,15 +78,7 @@ namespace TechExamAPI.Implementation
         {
             try
             {
-                var param = new DynamicParameters();
-                param.Add("@purchaseOrderID", data.purchaseOrderID);
-                param.Add("@customerID", data.customerID);
-                param.Add("@DateOfDelivery", DateTime.Now);
-                param.Add("@status", data.status);
-                param.Add("@amountDue", data.amountDue);
-                param.Add("@isActive", true);
-                param.Add("@purchaseItemJson", JsonSerializer.Serialize(data.purchaseItems));
-                var res = await _repo.GetData<vwPurchaseOrdersGVM>("UpdatePurchaseOrder", param);
+                var res = await _mediatr.Send(new UpdateCommand(data));
 
                 return res;
 
